@@ -16,13 +16,13 @@ import de.uniwue.mk.kall.formatconversion.teireader.reader.TEIReader;
 
 public class TestTEIReaderBatch {
 
-	//String inFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\grenzbotenTest";
-	//String inFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\corpus\\erz\\1840";
-	String inFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\teiReaderTest\\input";
-	//String outFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\grenzbotenTest_xmi";
-	//String outFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\corpus\\erz\\1840_xmi";
-	String outFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\teiReaderTest\\output";
-		
+	//String inFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\rw_corpus\\samples";
+	//String outFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\rw_corpus\\samples_xmi";
+	String inFolder = "D:\\Github\\TEIReader\\test";
+	String outFolder = "D:\\Github\\TEIReader\\test_xmi";
+	
+			
+	
 	@Test
 	public void testTEIReadingBatch() throws ResourceInitializationException, FileNotFoundException, SAXException {
 
