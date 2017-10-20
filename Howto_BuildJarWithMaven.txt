@@ -1,0 +1,35 @@
+README:
+
+Ein Jar with dependiencies in Maven erstellen (in Eclipse):
+
+- Zur pom.xml folgendes (mit angepasster Main-Klasse und ggf. Java-Version) hinzufügen hinter <dependencies> (im Reiter pom.xml):
+
+
+<build>
+  <plugins>
+    <plugin>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <configuration>
+        <archive>
+          <manifest>
+            <mainClass>de.uniwue.mk.kall.formatconversion.teireader.reader.Main</mainClass>
+          </manifest>
+        </archive>
+        <descriptorRefs>
+          <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  - In der Shell in das verzeichnis wechseln, in dem pom.xml liegt und folgenden Befehl ausführen:
+  mvn clean compile assembly:single
+  
+  - Achtung: Richtige Java-Version muss (vermutlich) in JAVA_HOME sein. 
