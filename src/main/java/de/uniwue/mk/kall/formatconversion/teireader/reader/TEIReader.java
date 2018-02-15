@@ -33,6 +33,8 @@ import de.uniwue.mk.kall.formatconversion.teireader.struct.XMLAttribute;
 import de.uniwue.mk.kall.formatconversion.teireader.struct.XMLDocument;
 import de.uniwue.mk.kall.formatconversion.teireader.struct.XMLElement;
 
+import de.idsma.rw.correctmetadata.*;
+
 public class TEIReader {
 
 	// default encoding
@@ -48,7 +50,11 @@ public class TEIReader {
 	public void batchConvertDocuments(File inFolder, File outFolder, boolean inferTypesystem)
 			throws ResourceInitializationException, FileNotFoundException, SAXException {
 
+		// for correcting the metadata for rwproject
+		CorrectMetadata corrMeta = new CorrectMetadata();
+		
 		if (!inFolder.isDirectory() || !outFolder.isDirectory()) {
+			System.out.println("infolder: " + inFolder + " outfolder: " + outFolder);
 			throw new IllegalArgumentException("Please provide 2 folder!!");
 		}
 
@@ -58,6 +64,8 @@ public class TEIReader {
 
 			System.out.println(f);
 			CAS cas = readDocument(f, inferTypesystem);
+			// correct the metadata (inserts missing fVals, Metadata (plus missing values), CabToken, Sentence, Text
+			cas = corrMeta.correctMetadata(cas, true);
 			XmiCasSerializer.serialize(cas, new FileOutputStream(new File(outFolder + "/" + f.getName() + ".xmi")));
 		}
 

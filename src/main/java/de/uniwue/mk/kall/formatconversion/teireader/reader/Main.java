@@ -11,7 +11,7 @@ public class Main {
 	
 	public void teiReadingBatch(String inFolder, String outFolder) throws ResourceInitializationException, FileNotFoundException, SAXException {
 
-		new TEIReader().batchConvertDocuments(new File(inFolder), new File(outFolder), true);
+		new TEIReader().batchConvertDocuments(new File(inFolder), new File(outFolder), false);
 	}
 
 	public static void main(String[] args) {
@@ -23,10 +23,6 @@ public class Main {
 			try {
 				System.out.println(args[0] + " --- " + args[1]);
 				mymain.teiReadingBatch(args[0], args[1]);
-				
-				//String inFolder = "D:\\Github\\TEIReader\\edit_convert";
-				//String outFolder = "D:\\Github\\TEIReader\\edit_convert_xmi";
-				//mymain.teiReadingBatch(inFolder, outFolder);
 				
 			}catch (Exception e) {
 				System.out.println("Programmfehler!");
