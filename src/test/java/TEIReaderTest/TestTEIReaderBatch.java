@@ -18,8 +18,8 @@ public class TestTEIReaderBatch {
 
 	//String inFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\rw_corpus\\samples";
 	//String outFolder = "D:\\WORK\\RW-Projekt\\rohdaten\\rw_corpus\\samples_xmi";
-	String inFolder = "D:\\Github\\TEIReader\\test";
-	String outFolder = "D:\\Github\\TEIReader\\test_converted";
+	String inFolder = "E:\\Github\\TEIReader\\test";
+	String outFolder = "E:\\Github\\TEIReader\\test_converted";
 	
 			
 	

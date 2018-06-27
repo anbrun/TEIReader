@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -46,6 +47,8 @@ public class TEIReader {
 		// use the own typesystem as start
 		currentTS = TEIReaderUtil.createStandardTypesystem();
 	}
+	
+	
 
 	public void batchConvertDocuments(File inFolder, File outFolder, boolean inferTypesystem)
 			throws ResourceInitializationException, FileNotFoundException, SAXException {
@@ -55,7 +58,7 @@ public class TEIReader {
 		
 		if (!inFolder.isDirectory() || !outFolder.isDirectory()) {
 			System.out.println("infolder: " + inFolder + " outfolder: " + outFolder);
-			throw new IllegalArgumentException("Please provide 2 folder!!");
+			throw new IllegalArgumentException("Please provide 2 folders");
 		}
 
 		for (File f : inFolder.listFiles()) {
@@ -64,7 +67,9 @@ public class TEIReader {
 
 			System.out.println(f);
 			CAS cas = readDocument(f, inferTypesystem);
-			// correct the metadata (inserts missing fVals, Metadata (plus missing values), CabToken, Sentence, Text
+			// creates the metadata annotation and inserts missing fVals),  CabToken, Sentence, Text
+			cas = corrMeta.createAllRWAnnos(cas);
+            // corrects Metadata (plus missing values)
 			cas = corrMeta.correctMetadata(cas, true);
 			XmiCasSerializer.serialize(cas, new FileOutputStream(new File(outFolder + "/" + f.getName() + ".xmi")));
 		}
@@ -78,6 +83,34 @@ public class TEIReader {
 			e.printStackTrace();
 		}
 	}
+
+	public void batchCorrectMetadata(File inFolder, File outFolder,
+                                     boolean withDefaults)
+    throws ResourceInitializationException, SAXException, IOException{
+        // for correcting the metadata for rwproject
+        CorrectMetadata corrMeta = new CorrectMetadata();
+        TypeSystemDescription tsd = TEIReaderUtil.createStandardTypesystem();
+
+        if (!inFolder.isDirectory() || !outFolder.isDirectory()) {
+            System.out.println("infolder: " + inFolder + " outfolder: " + outFolder);
+            throw new IllegalArgumentException("Please provide 2 folders");
+        }
+
+        for (File f : inFolder.listFiles()) {
+            if (!f.getName().endsWith(".xmi"))
+                continue;
+
+            System.out.println("Processing: " + f.getName());
+            CAS mainCas = CasCreationUtils.createCas(tsd, null, null);
+            // will remove any annotation that is not part of the RWTypesystem
+            XmiCasDeserializer.deserialize(new FileInputStream(f), mainCas, true);
+
+            corrMeta.correctMetadata(mainCas, withDefaults);
+
+            FileOutputStream outStream = new FileOutputStream(new File(outFolder + "/" + f.getName()));
+            XmiCasSerializer.serialize(mainCas, outStream);
+        }
+    }
 
 	public CAS readDocument(File inFile, boolean inferTypesystem) throws ResourceInitializationException {
 
