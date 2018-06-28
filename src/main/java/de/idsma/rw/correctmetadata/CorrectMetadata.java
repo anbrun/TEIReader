@@ -184,7 +184,7 @@ public class CorrectMetadata {
                         ) {
                     System.out.println("WARN: value empty for " + metaFeatName);
                 }
-                System.out.println(metaFeatName + ": " + value);
+                //System.out.println(metaFeatName + ": " + value);
                 Feature metaFeat = metaType.getFeatureByBaseName(metaFeatName);
                 metaDataAnno.setFeatureValueFromString(metaFeat, value);
             }
@@ -264,7 +264,7 @@ public class CorrectMetadata {
         texttypeValNew = WordUtils.capitalize(texttypeValNew);
         metaDataAnno.setFeatureValueFromString(texttype, texttypeValNew);
 
-        System.out.println("Texttype: " + texttypeVal + " --> " + texttypeValNew);
+        //System.out.println("Texttype: " + texttypeVal + " --> " + texttypeValNew);
 
         // fix narrative --> if "WithDefaults" is set to true, add defaults here
         if (narrativeVal.equals("") ||  narrativeVal.equals("None")) {
