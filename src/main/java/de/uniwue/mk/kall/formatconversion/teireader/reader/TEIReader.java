@@ -322,6 +322,7 @@ public class TEIReader {
 						xmlElements.add(new XMLElement(sbElement.toString(), currentIndex, currentIndex));
 
 					} else {
+					    // HERER
 						currentlyOpenedElements.push(new XMLElement(sbElement.toString(), currentIndex, currentIndex));
 					}
 				}
@@ -334,7 +335,6 @@ public class TEIReader {
 
 					// if those are the same xmlElements we can create an
 					// annotation
-
 					if (pop.getName().equals(sbElement.toString())) {
 
 						// set the correct end

@@ -26,8 +26,8 @@ public class XMLElement {
 		int nrElements = 0;
 		StringBuilder currentAttSb = new StringBuilder();
 			for (char c : content.toCharArray()) {
-
-				if (c == ' ') {
+				if (Character.isWhitespace(c)) {
+				//if (c == ' ') {
 					if (nrElements == 0) {
 						// reste again
 						this.name = currentAttSb.toString();
