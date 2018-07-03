@@ -92,7 +92,7 @@ public class CorrectMetadata {
             String value = "";
             for (AnnotationFS fAnno : fAnnos) {
                 String attrs = fAnno.getFeatureValueAsString(attributes);
-                if (attrs.matches("name=" + meta + "##.*")) {
+                if (attrs.matches(".*name=" + meta + "##.*")) {
                     matchingF = fAnno;
                     break;
                 }
@@ -118,7 +118,7 @@ public class CorrectMetadata {
                     //System.out.println("value from covered text: " + value);
                 }
             } else {
-                //System.out.println(meta + " missing!");
+                System.out.println(meta + " missing!");
                 // create a new annotation for the missing meta datum with empty value
                 // insert it at the start position of the <fs> tag with zero
                 // length
