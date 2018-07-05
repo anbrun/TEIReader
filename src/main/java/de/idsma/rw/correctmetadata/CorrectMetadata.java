@@ -302,14 +302,34 @@ public class CorrectMetadata {
             }
         }
 
+        String authorValOld = authorVal;
         // fix author (add Undefined for missing author)
         if (authorVal.equals("") || authorVal.equals("None")) {
             metaDataAnno.setFeatureValueFromString(author, "Undefined");
         }
+        // try to fix Author spacing
+        else {
+            if (Pattern.matches(".*,[^\\s].*", authorVal)) {
+                authorVal = authorVal.replaceAll(",([^\\s])", ", $1");
+            }
+            // add a space before a "von" (if missing)
+            if (Pattern.matches(".*[^\\s]von$", authorVal)) {
+                authorVal = authorVal.replaceAll("([^\\s])von$", "$1 von");
+            }
+            // add a space before any capitalized Letter in the word
+            authorVal = authorVal.replaceAll("(\\p{Lower})(\\p{Upper})", "$1 $2");
+            metaDataAnno.setFeatureValueFromString(author, authorVal);
+        }
+        //System.out.println(authorValOld + " --- " + authorVal);
 
         // fix author (add Undefined for missing titel)
         if (titleVal.equals("") || titleVal.equals("None")) {
             metaDataAnno.setFeatureValueFromString(title, "Undefined");
+        }
+        // try to fix Title spacing (Space before upper case character)
+        else {
+            titleVal = titleVal.replaceAll("(\\p{Lower})(\\p{Upper})", "$1 $2");
+            metaDataAnno.setFeatureValueFromString(title, titleVal);
         }
 
         return (mainCas);

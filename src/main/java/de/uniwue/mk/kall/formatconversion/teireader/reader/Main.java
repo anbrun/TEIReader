@@ -63,7 +63,7 @@ public class Main {
                         mymain.corrMetadataBatch(args[0], args[1], true);
                     }
                     else {
-                        System.out.println("Unknown option '" + args[2] + "'. Must be '-metadata' oder '-metadataWithDefaults' or be omitted.");
+                        System.out.println("Unknown option '" + args[2] + "'. Must be '--metadata' oder '--metadataWithDefaults' or be omitted.");
                     }
                 }
                 else if (args.length == 2) {
