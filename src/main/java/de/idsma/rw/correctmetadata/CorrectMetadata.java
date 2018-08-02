@@ -40,8 +40,46 @@ public class CorrectMetadata {
         mainCas = this.createCabTokens(mainCas);
         // create Sentence and Text annos
         mainCas = this.createSentAndText(mainCas);
+        // create STWR annos (if the input xml contained any)
+        mainCas = this.createSTWRAnnos(mainCas);
         return mainCas;
     }
+
+    /**
+     * If the XML input contained <stwr>-Tags, transform those to STWR annotations
+     * @param mainCas
+     * @return
+     */
+    public CAS createSTWRAnnos(CAS mainCas) {
+        // get the STWR annotation
+        Type stwrType = mainCas.getTypeSystem().getType("de.idsma.rw.STWR");
+        Feature rtype = stwrType.getFeatureByBaseName("RType");
+        Feature medium = stwrType.getFeatureByBaseName("Medium");
+
+        // get the TeiType annotation
+        String typeName = "de.uniwue.kalimachos.coref.type.TeiType";
+        Type teiType = mainCas.getTypeSystem().getType(typeName);
+        AnnotationIndex<AnnotationFS> teiTypeIndex = mainCas.getAnnotationIndex(teiType);
+        Feature tagName = teiType.getFeatureByBaseName("TagName");
+        Feature attributes = teiType.getFeatureByBaseName("Attributes");
+
+        // collect the <f> tag annotations
+        // and start and end pos of fs anno
+        int fs_start = 0;
+        int fs_end = 0;
+        Set<AnnotationFS> fAnnos = new HashSet<>();
+        for (AnnotationFS teiTypeAnno : teiTypeIndex) {
+            String value = teiTypeAnno.getFeatureValueAsString(tagName);
+            if (value.equals("stwr")) {
+                AnnotationFS stwrAnno = mainCas.createAnnotation(stwrType, teiTypeAnno.getBegin(), teiTypeAnno.getEnd());
+                stwrAnno.setFeatureValueFromString(rtype, this.getFeatureValFromTeiType(teiTypeAnno, "type", mainCas));
+                stwrAnno.setFeatureValueFromString(medium, this.getFeatureValFromTeiType(teiTypeAnno, "medium", mainCas));
+                mainCas.addFsToIndexes(stwrAnno);
+            }
+        }
+        return mainCas;
+    }
+
 
     /**
      * Creates a Metadata annotation from the TEI metadata
@@ -335,7 +373,28 @@ public class CorrectMetadata {
         return (mainCas);
     }
 
+
+    public CAS removeAllAnnotationsOfType(CAS mainCas, String typeName) {
+        Type myType = mainCas.getTypeSystem().getType(typeName);
+        // remove sent and text annotations if they exist already
+        // (must create a list first, because uima does not allow removing annos
+        // while iterating over the annotation index)
+        AnnotationIndex<AnnotationFS> myTypeIndex = mainCas.getAnnotationIndex(myType);
+        List<AnnotationFS> myList = new ArrayList<>();
+        for (AnnotationFS anno : myTypeIndex) {
+            myList.add(anno);
+        }
+        for (AnnotationFS anno : myList) {
+            mainCas.removeFsFromIndexes(anno);
+        }
+        return mainCas;
+    }
+
     public CAS createSentAndText(CAS mainCas) {
+        // first remove all sent and text annos;
+        mainCas = this.removeAllAnnotationsOfType(mainCas, "de.idsma.rw.Sentence");
+        mainCas = this.removeAllAnnotationsOfType(mainCas, "de.idsma.rw.Text");
+
         Type sentType = mainCas.getTypeSystem().getType("de.idsma.rw.Sentence");
         Type textType = mainCas.getTypeSystem().getType("de.idsma.rw.Text");
 
@@ -352,14 +411,19 @@ public class CorrectMetadata {
                 AnnotationFS newAnno = mainCas.createAnnotation(textType, teiTypeAnno.getBegin(), teiTypeAnno.getEnd());
                 mainCas.addFsToIndexes(newAnno);
             } else if (in_body && value.equals("s")) {
-                AnnotationFS newAnno = mainCas.createAnnotation(sentType, teiTypeAnno.getBegin(), teiTypeAnno.getEnd());
-                newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Id"),
-                        this.getFeatureValFromTeiType(teiTypeAnno, "id", mainCas));
-                newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Prev"),
-                        this.getFeatureValFromTeiType(teiTypeAnno, "prev", mainCas));
-                newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Next"),
-                        this.getFeatureValFromTeiType(teiTypeAnno, "next", mainCas));
-                mainCas.addFsToIndexes(newAnno);
+                if (this.getFeatureValFromTeiType(teiTypeAnno, "id", mainCas) == null) {
+                    System.out.println("Sentence with id=null was skipped");
+                }
+                else {
+                    AnnotationFS newAnno = mainCas.createAnnotation(sentType, teiTypeAnno.getBegin(), teiTypeAnno.getEnd());
+                    newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Id"),
+                            this.getFeatureValFromTeiType(teiTypeAnno, "id", mainCas));
+                    newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Prev"),
+                            this.getFeatureValFromTeiType(teiTypeAnno, "prev", mainCas));
+                    newAnno.setFeatureValueFromString(sentType.getFeatureByBaseName("Next"),
+                            this.getFeatureValFromTeiType(teiTypeAnno, "next", mainCas));
+                    mainCas.addFsToIndexes(newAnno);
+                }
             }
         }
 
@@ -376,6 +440,9 @@ public class CorrectMetadata {
      * @return
      */
     public CAS createCabTokens(CAS mainCas) {
+        // remove all existing CabTokens
+        mainCas = this.removeAllAnnotationsOfType(mainCas, "de.idsma.rw.CabToken");
+
         // create CabTokens from the wAnnos
         String typeName2 = "de.idsma.rw.CabToken";
         Type cabType = mainCas.getTypeSystem().getType(typeName2);
@@ -496,8 +563,8 @@ public class CorrectMetadata {
         try {
             CorrectMetadata myMain = new CorrectMetadata();
 
-            String inputPath = "E:\\Git_RW\\myrepo\\7_final\\final\\consens+inArbeit\\rwk_erz_930-1.xml.xmi";
-            String outputPath = "E:\\Git_RW\\myrepo\\7_final\\final\\consens+inArbeit\\rwk_erz_930-1_korr.xml.xmi";
+            String inputPath = "E:\\TEMP\\doppelsatz\\rwk_erz_2621-1.xml.xmi";
+            String outputPath = "E:\\TEMP\\doppelsatz_out\\rwk_erz_2621-1.xml.xmi";
 
             String typeSystem = "E:/Github/pycas_rw/pycas_rw_core/redeWiedergabeTypesystem_compare_tei_cab.xml";
             TypeSystemDescription tsd = TypeSystemDescriptionFactory
@@ -505,7 +572,7 @@ public class CorrectMetadata {
             CAS mainCas = CasCreationUtils.createCas(tsd, null, null);
             XmiCasDeserializer.deserialize(new FileInputStream(inputPath), mainCas);
 
-            //myMain.getMetadataFromTEI(mainCas);
+            myMain.createSentAndText(mainCas);
 
             FileOutputStream outStream = new FileOutputStream(outputPath);
             XmiCasSerializer.serialize(mainCas, outStream);
