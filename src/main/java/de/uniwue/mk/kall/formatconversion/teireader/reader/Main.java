@@ -8,7 +8,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.xml.sax.SAXException;
 
 public class Main {
-	
+
 	
 	public void teiReadingBatch(String inFolder, String outFolder) throws ResourceInitializationException, FileNotFoundException, SAXException {
 
@@ -18,9 +18,22 @@ public class Main {
     public void corrMetadataBatch(String inFolder, String outFolder, boolean withDefaults) throws ResourceInitializationException, IOException, SAXException {
         new TEIReader().batchCorrectMetadata(new File(inFolder), new File(outFolder), withDefaults);
     }
-
+/*
+    public static void main(String[] args) {
+        Main mymain = new Main();
+        String infolder = "E:\\WORK\\RW-Projekt\\Luebbe\\xml_cab";
+        String outfolder = "E:\\WORK\\RW-Projekt\\Luebbe\\xmi";
+        try {
+            mymain.teiReadingBatch(infolder, outfolder);
+        }  catch (Exception e) {
+            System.out.println("ERROR!");
+            e.printStackTrace();
+        }
+    }
+*/
 	public static void main(String[] args) {
 			Main mymain = new Main();
+
 			String help =
                     "TEIReader converts TEI XML files to XMI files while preserving their tags, creates XMI that matches the RW typesystem\n" +
                             "and generates and corrects Metadata\n" +
@@ -81,5 +94,6 @@ public class Main {
             }
 		
 	}
+
 
 }

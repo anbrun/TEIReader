@@ -52,9 +52,11 @@ public class CorrectMetadata {
      */
     public CAS createSTWRAnnos(CAS mainCas) {
         // get the STWR annotation
-        Type stwrType = mainCas.getTypeSystem().getType("de.idsma.rw.STWR");
-        Feature rtype = stwrType.getFeatureByBaseName("RType");
-        Feature medium = stwrType.getFeatureByBaseName("Medium");
+        Type stwrType = mainCas.getTypeSystem().getType("de.idsma.rw.Stwr");
+        Feature stwr_rtype = stwrType.getFeatureByBaseName("RType");
+        Feature stwr_medium = stwrType.getFeatureByBaseName("Medium");
+        Feature stwr_surf = stwrType.getFeatureByBaseName("Stwr");
+        Feature stwr_id = stwrType.getFeatureByBaseName("StwrID");
 
         // get the TeiType annotation
         String typeName = "de.uniwue.kalimachos.coref.type.TeiType";
@@ -68,13 +70,18 @@ public class CorrectMetadata {
         int fs_start = 0;
         int fs_end = 0;
         Set<AnnotationFS> fAnnos = new HashSet<>();
+        Integer idCount = 1;
         for (AnnotationFS teiTypeAnno : teiTypeIndex) {
             String value = teiTypeAnno.getFeatureValueAsString(tagName);
             if (value.equals("stwr")) {
                 AnnotationFS stwrAnno = mainCas.createAnnotation(stwrType, teiTypeAnno.getBegin(), teiTypeAnno.getEnd());
-                stwrAnno.setFeatureValueFromString(rtype, this.getFeatureValFromTeiType(teiTypeAnno, "type", mainCas));
-                stwrAnno.setFeatureValueFromString(medium, this.getFeatureValFromTeiType(teiTypeAnno, "medium", mainCas));
+                stwrAnno.setFeatureValueFromString(stwr_rtype, this.getFeatureValFromTeiType(teiTypeAnno, "type", mainCas));
+                stwrAnno.setFeatureValueFromString(stwr_medium, this.getFeatureValFromTeiType(teiTypeAnno, "medium", mainCas));
+                stwrAnno.setFeatureValueFromString(stwr_id, idCount.toString());
+                stwrAnno.setFeatureValueFromString(stwr_surf, teiTypeAnno.getCoveredText());
+
                 mainCas.addFsToIndexes(stwrAnno);
+                idCount++;
             }
         }
         return mainCas;
@@ -241,6 +248,39 @@ public class CorrectMetadata {
     }
 
     /**
+     * Reads changefile and changes autor and title values accordingly
+     * Structure of changefile: csv-file with columns
+     * file	title	title_korr	author	author_korr
+     * TODO: Noch implementieren
+     * @param mainCas
+     * @param changefile
+     * @return
+     */
+    public CAS correct_autor_title_with_list(CAS mainCas, String changefile){
+        // get the Metadata annotation
+        Type metaType = mainCas.getTypeSystem().getType("de.idsma.rw.Metadata");
+        AnnotationIndex<AnnotationFS> metatypeIndex = mainCas.getAnnotationIndex(metaType);
+        AnnotationFS metaDataAnno;
+        if (metatypeIndex.size() == 0) {
+            metaDataAnno = mainCas.createAnnotation(metaType, 0, 0);
+            mainCas.addFsToIndexes(metaDataAnno);
+        } else {
+            // there is only one metaData Annotation per text
+            metaDataAnno = metatypeIndex.iterator().next();
+        }
+
+        Feature author = metaType.getFeatureByBaseName("Author");
+        String authorVal = metaDataAnno.getFeatureValueAsString(author);
+        Feature title = metaType.getFeatureByBaseName("Title");
+        String titleVal = metaDataAnno.getFeatureValueAsString(title);
+
+        // read the changefile
+
+        return(mainCas);
+    }
+
+
+    /**
      * Assumes that there is a Metadata annotation;
      * adds missing values and corrects mistakes in that annotation
      * does NOT make any changes to the TEI metadata values!!!
@@ -284,6 +324,77 @@ public class CorrectMetadata {
         Feature title = metaType.getFeatureByBaseName("Title");
         String titleVal = metaDataAnno.getFeatureValueAsString(title);
 
+
+        // if corpuspart is missing, restore it from id
+        //System.out.println("corpuspartVal: " + corpuspartVal);
+        if (corpuspartVal.equals("undefined")){
+            Feature idtype = metaType.getFeatureByBaseName("Id");
+            String idtypeVal = metaDataAnno.getFeatureValueAsString(idtype);
+            //System.out.println(idtypeVal);
+            corpuspartVal = idtypeVal.replaceAll("_(.*)", "");
+            //System.out.println("corpuspartVal: " + corpuspartVal);
+        }
+
+        // rename the corpusparts
+        String corpuspartValNew = "";
+        switch (corpuspartVal) {
+            case "erz":
+                corpuspartValNew = "digbib";
+                break;
+            case "zeit":
+                corpuspartValNew = "mkhz";
+                break;
+            case "famz":
+                corpuspartValNew = "grenz";
+                break;
+                default:
+                    corpuspartValNew = corpuspartVal;
+        }
+
+        metaDataAnno.setFeatureValueFromString(corpuspart, corpuspartValNew);
+
+
+        // set periodical val to "Undefined", if the corpuspartValNew is digbib
+        if (corpuspartValNew.equals("digbib")) {
+            periodicalVal = "Undefined";
+        }
+
+        // fix the new periodical names
+        String periodicalValNew = periodicalVal;
+        switch (periodicalVal) {
+            case "BZ":
+                periodicalValNew = "badener";
+                break;
+            case "CAZ":
+                periodicalValNew = "czernowitzer";
+                break;
+            case "MT":
+                periodicalValNew = "maehrisches";
+                break;
+            case "MZ":
+                periodicalValNew = "marburger";
+                break;
+            case "RP":
+                periodicalValNew = "reichspost";
+                break;
+            case "SGV":
+                periodicalValNew = "stgaller";
+                break;
+            default:
+                periodicalValNew = periodicalVal.replaceAll("nn_", "");
+                break;
+        }
+        metaDataAnno.setFeatureValueFromString(periodical, periodicalValNew);
+
+
+        // add metadata source
+        Feature source = metaType.getFeatureByBaseName("Source");
+        String sourceVal = corpuspartValNew;
+        if (corpuspartValNew.equals("mkhz")) {
+                sourceVal = corpuspartValNew + "." + periodicalValNew;
+        }
+        metaDataAnno.setFeatureValueFromString(source, sourceVal);
+
         // fix texttype
         String texttypeValNew = texttypeVal;
         if (texttypeValNew.equals("") || texttypeValNew.equals("None")) {
@@ -296,8 +407,15 @@ public class CorrectMetadata {
         // correct wrong values here
         if (texttypeValNew.equals("Reisebericht")) {
             texttypeValNew = "Reisebericht/Brief";
-        } else if (texttypeValNew.equals("erzaehlung")) {
+        }
+        else if (texttypeValNew.equals("Brief")) {
+            texttypeValNew = "Reisebericht/Brief";
+        }
+        else if (texttypeValNew.equals("erzaehlung")
+                || texttypeValNew.equals("Erzähltexte")
+                || texttypeValNew.equals("Erzählung")){
             texttypeValNew = "Erzähltext";
+            System.out.println("Korrekt Erzähltext");
         }
         texttypeValNew = WordUtils.capitalize(texttypeValNew);
         metaDataAnno.setFeatureValueFromString(texttype, texttypeValNew);
@@ -563,16 +681,16 @@ public class CorrectMetadata {
         try {
             CorrectMetadata myMain = new CorrectMetadata();
 
-            String inputPath = "E:\\TEMP\\doppelsatz\\rwk_erz_2621-1.xml.xmi";
-            String outputPath = "E:\\TEMP\\doppelsatz_out\\rwk_erz_2621-1.xml.xmi";
+            String inputPath = "E:\\Git_RW\\myrepo\\7_final\\FINAL-release\\rwk_mkhz_10015-1.xmi";
+            String outputPath = "E:\\Git_RW\\myrepo\\7_final\\FINAL-release_metacorrect\\rwk_mkhz_10015-1.xmi";
 
-            String typeSystem = "E:/Github/pycas_rw/pycas_rw_core/redeWiedergabeTypesystem_compare_tei_cab.xml";
+            String typeSystem = "E:/Github/pycas_rw/pycas_rw_core/redeWiedergabeTypesystem_compare_tei_cab_fI.xml";
             TypeSystemDescription tsd = TypeSystemDescriptionFactory
                     .createTypeSystemDescriptionFromPath(new File(typeSystem).toURI().toURL().toString());
             CAS mainCas = CasCreationUtils.createCas(tsd, null, null);
             XmiCasDeserializer.deserialize(new FileInputStream(inputPath), mainCas);
 
-            myMain.createSentAndText(mainCas);
+            myMain.correctMetadata(mainCas, true);
 
             FileOutputStream outStream = new FileOutputStream(outputPath);
             XmiCasSerializer.serialize(mainCas, outStream);

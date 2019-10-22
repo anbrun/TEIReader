@@ -11,8 +11,7 @@ public class TEIReaderUtil {
 	public static TypeSystemDescription createStandardTypesystem(){
 		
 		//URL urlTS = ClassLoader.getSystemClassLoader().getResource("MiKalliTypesystem.xml");
-		URL urlTS = ClassLoader.getSystemClassLoader().getResource("redeWiedergabeTypesystem_compare_tei_cab.xml");
-		
+		URL urlTS = ClassLoader.getSystemClassLoader().getResource("redeWiedergabeTypesystem_compare_tei_cab_fI.xml");
 		TypeSystemDescription tsds = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(urlTS.toString());
 		
 		return tsds;

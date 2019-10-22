@@ -59,6 +59,11 @@
           <name>Corpuspart</name>
           <description/>
           <rangeTypeName>uima.cas.String</rangeTypeName>
+          </featureDescription>
+        <featureDescription>
+          <name>Source</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
 		  <featureDescription>
           <name>Title</name>
